@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>춘천시 AI 기반 시민 제안 처리 플랫폼</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.3em;
+            font-weight: 400;
+        }
+
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            margin: 50px 0;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            position: relative;
+        }
+
+        .step-container {
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .step-box {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(79, 172, 254, 0.3);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-box.ai-step {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #2c3e50;
+            border: 3px solid #ff6b6b;
+            box-shadow: 0 15px 35px rgba(255, 107, 107, 0.3);
+        }
+
+        .step-box:hover {
+            transform: translateY(-5px);
+        }
+
+        .step-title {
+            font-size: 1.6em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .step-desc {
+            font-size: 1.1em;
+            opacity: 0.95;
+            margin-bottom: 15px;
+        }
+
+        .ai-badge {
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            background: #ff6b6b;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 25px;
+            font-size: 0.85em;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        .step-details {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 800px;
+            border-left: 5px solid #4facfe;
+        }
+
+        .step-box.ai-step + .step-details {
+            border-left-color: #ff6b6b;
+            background: linear-gradient(135deg, #fff5f5 0%, #fef5f5 100%);
+        }
+
+        .detail-section {
+            margin-bottom: 20px;
+        }
+
+        .detail-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-title {
+            color: #2c3e50;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .detail-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .detail-list li {
+            padding: 6px 0;
+            color: #7f8c8d;
+            position: relative;
+            padding-left: 25px;
+            line-height: 1.5;
+        }
+
+        .detail-list li::before {
+            content: '▶';
+            position: absolute;
+            left: 0;
+            color: #4facfe;
+            font-size: 0.9em;
+        }
+
+        .ai-step + .step-details .detail-list li::before {
+            color: #ff6b6b;
+        }
+
+        .example-box {
+            background: #f8f9fa;
+            border-left: 4px solid #4facfe;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .ai-step + .step-details .example-box {
+            border-left-color: #ff6b6b;
+            background: #fff8f8;
+        }
+
+        .example-text {
+            font-style: italic;
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .example-arrow {
+            color: #ff6b6b;
+            font-weight: bold;
+            margin: 0 10px;
+        }
+
+        .arrow {
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 25px solid #95a5a6;
+            margin: 15px auto;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+        }
+
+        .tech-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border-left: 6px solid #3498db;
+        }
+
+        .tech-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15);
+        }
+
+        .tech-card h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+
+        .tech-list {
+            list-style: none;
+        }
+
+        .tech-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #ecf0f1;
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+
+        .tech-list li:last-child {
+            border-bottom: none;
+        }
+
+        .data-flow {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin: 50px 0;
+        }
+
+        .data-flow h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+            font-weight: 600;
+        }
+
+        .data-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .data-type {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .data-type h4 {
+            margin-bottom: 15px;
+            color: #a8edea;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .data-type p {
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .implementation-timeline {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin: 50px 0;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .timeline-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .timeline-header h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 2em;
+            font-weight: 600;
+        }
+
+        .timeline-header p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .timeline {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+        }
+
+        .timeline-item {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(252, 182, 159, 0.3);
+        }
+
+        .timeline-item::before {
+            content: attr(data-month);
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #e74c3c;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .timeline-item h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+
+        .timeline-item p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+            }
+            
+            .header h1 {
+                font-size: 2.2em;
+            }
+            
+            .step-box {
+                padding: 25px 30px;
+            }
+            
+            .step-details {
+                padding: 20px;
+            }
+            
+            .tech-stack {
+                grid-template-columns: 1fr;
+            }
+            
+            .timeline {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏛️ 춘천시 AI 기반 시민 제안 처리 플랫폼</h1>
+            <p>생성형 AI를 활용한 스마트 행정 서비스 아키텍처</p>
+        </div>
+
+        <div class="flow-diagram">
+            <!-- 시민 제안 입력 -->
+            <div class="flow-step">
+                <div class="step-container">
+                    <div class="step-box">
+                        <div class="step-title">📱 시민 제안 입력</div>
+                        <div class="step-desc">모바일/웹 챗봇 UI<br>카카오톡 채널 연동</div>
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-section">
+                            <div class="detail-title">🎯 주요 기능</div>
+                            <ul class="detail-list">
+                                <li>직관적인 ChatGPT 스타일 대화형 인터페이스</li>
+                                <li>반응형 웹 디자인으로 PC/모바일 완벽 지원</li>
+                                <li>카카오톡 채널 연동으로 접근성 극대화</li>
+                                <li>음성 입력 및 이미지 첨부 기능 지원</li>
+                                <li>실시간 입력 가이드 및 도움말 제공</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-title">⚙️ 기술 구현</div>
+                            <ul class="detail-list">
+                                <li>React/Vue 기반 SPA 개발</li>
+                                <li>카카오톡 비즈니스 API 연동</li>
+                                <li>실시간 양방향 통신 (WebSocket)</li>
+                                <li>Progressive Web App(PWA) 지원</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow"></div>
+            
+            <!-- 텍스트 전처리 -->
+            <div class="flow-step">
+                <div class="step-container">
+                    <div class="step-box">
+                        <div class="step-title">🔍 지능형 텍스트 전처리</div>
+                        <div class="step-desc">욕설/감정 필터링<br>맞춤법 보정 • 개인정보 보호</div>
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-section">
+                            <div class="detail-title">🛡️ 필터링 및 정제</div>
+                            <ul class="detail-list">
+                                <li>한국어 욕설/비속어 사전 기반 자동 필터링</li>
+                                <li>감정적 표현 감지 및 중성적 언어로 변환</li>
+                                <li>Hanspell 라이브러리 활용 맞춤법 자동 보정</li>
+                                <li>정규표현식 기반 불필요한 특수문자 제거</li>
+                                <li>중복 문장 및 스팸성 내용 자동 탐지</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-title">🔒 개인정보 보호</div>
+                            <ul class="detail-list">
+                                <li>주민등록번호, 전화번호 등 개인식별정보 자동 마스킹</li>
+                                <li>주소 정보 일반화 처리 (상세주소 → 동/구 단위)</li>
+                                <li>GDPR 및 개인정보보호법 준수 데이터 처리</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow"></div>
+            
+            <!-- AI 요약기 -->
+            <div class="flow-step">
+                <div class="step-container">
+                    <div class="step-box ai-step">
+                        <div class="ai-badge">✅ AI CORE</div>
+                        <div class="step-title">📝 AI 요약 생성기</div>
+                        <div class="step-desc">KoGPT/GPT-4<br>핵심 내용 3줄 요약 • 맥락 보존</div>
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-section">
+                            <div class="detail-title">🤖 생성형 AI 핵심 기술</div>
+                            <ul class="detail-list">
+                                <li>KoGPT-3/GPT-4 대규모 언어 모델 활용</li>
+                                <li>한국어 특화 프롬프트 엔지니어링 적용</li>
+                                <li>추상적 요약(Abstractive Summarization) 기법</li>
+                                <li>맥락 보존 및 핵심 정보 추출 알고리즘</li>
+                                <li>최대 3줄 이내 압축 요약 자동 생성</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-title">💡 실제 변환 예시</div>
+                            <div class="example-box">
+                                <div class="example-text"><strong>원문:</strong> "우리 동네 도로에 킥보드가 너무 많이 세워져 있어서 할아버지들이 걸어다니기 힘들어요..."</div>
+                                <div class="example-arrow">↓</div>
+                                <div class="example-text"><strong>요약:</strong> "고령자 보행 안전을 위한 전동 킥보드 주차구역 설치 필요"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow"></div>
+            
+            <!-- 정책 언어 변환기 -->
+            <div class="flow-step">
+                <div class="step-container">
+                    <div class="step-box ai-step">
+                        <div class="ai-badge">✅ AI CORE</div>
+                        <div class="step-title">🔄 정책 언어 변환기</div>
+                        <div class="step-desc">시민 언어 → 행정 언어<br>정책 제안형 표현 자동화</div>
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-section">
+                            <div class="detail-title">🎯 생성형 AI 변환 기술</div>
+                            <ul class="detail-list">
+                                <li>Large Language Model 기반 문체 변환</li>
+                                <li>시민 일상 언어 → 행정 공식 언어 자동 변환</li>
+                                <li>정책 제안서 표준 양식에 맞는 문장 재구성</li>
+                                <li>법령 및 행정용어 데이터베이스 자동 매핑</li>
+                                <li>Few-shot Learning을 통한 변환 정확도 향상</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-title">💡 변환 예시</div>
+                            <div class="example-box">
+                                <div class="example-text"><strong>시민 언어:</strong> "버스가 자주 안 와요"</div>
+                                <div class="example-arrow">↓</div>
+                                <div class="example-text"><strong>정책 언어:</strong> "대중교통 배차 간격 개선을 통한 시민 교통편의 증진 방안"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow"></div>
+            
+            <!-- 부서 자동 분류기 -->
+            <div class="flow-step">
+                <div class="step-container">
+                    <div class="step-box ai-step">
+                        <div class="ai-badge">✅ AI CORE</div>
+                        <div class="step-title">🏢 부서 자동 분류기</div>
+                        <div class="step-desc">KoBERT 기반 분류<br>15개 부서 자동 라우팅 • 95% 정확도</div>
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-section">
+                            <div class="detail-title">🤖 AI 분류 시스템</div>
+                            <ul class="detail-list">
+                                <li>KoBERT 기반 다중 클래스 텍스트 분류 모델</li>
+                                <li>Transfer Learning을 통한 한국 행정 도메인 특화</li>
+                                <li>15개 주요 부서별 자동 라우팅 시스템</li>
+                                <li>키워드 기반 + 의미 기반 하이브리드 분류</li>
+                                <li>분류 정확도 95% 이상 목표 달성</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-title">🏛️ 대상 부서</div>
+                            <ul class="detail-list">
+                                <li>도로교통과, 환경과, 복지정책과</li>
+                                <li>문화관광과, 도시계획과, 건축과</li>
+                                <li>경제일자리과, 교육청소년과 등</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow"></div>
+            
+            <!-- 유사 제안 클러스터링 -->
+            <div class="flow-step">
+                <div class="step-container">
+                    <div class="step-box ai-step">
+                        <div class="ai-badge">✅ AI CORE</div>
+                        <div class="step-title">🔗 유사 제안 클러스터링</div>
+                        <div class="step-desc">Sentence-BERT + FAISS<br>유사 제안 자동 묶음</div>
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-section">
+                            <div class="detail-title">🤖 AI 군집화 기술</div>
+                            <ul class="detail-list">
+                                <li>Sentence-BERT로 고차원 문장 임베딩 생성</li>
+                                <li>FAISS(Facebook AI Similarity Search) 벡터 데이터베이스</li>
+                                <li>KMeans++ 클러스터링 알고리즘 적용</li>
+                                <li>코사인 유사도 기반 의미적 유사성 측정</li>
+                                <li>동적 클러스터 수 최적화 알고리즘</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-title">📊 클러스터링 결과물</div>
+                            <ul class="detail-list">
+                                <li>"킥보드 관련 제안 14건" 자동 그룹핑</li>
+                                <li>클러스터별 대표 제안문 자동 생성</li>
+                                <li>제안 빈도 기반 우선순위 자동 설정</li>
+                                <li>시간별/지역별 트렌드 분석</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow"></div>
+            
+            <!-- 리포트 생성기 -->
+            <div class="flow-step">
+                <div class="step-container">
+                    <div class="step-box ai-step">
+                        <div class="ai-badge">✅ AI CORE</div>
+                        <div class="step-title">📊 지능형 리포트 생성기</div>
+                        <div class="step-desc">다중 프롬프트 체이닝<br>통계 분석 • 자동화 보고서</div>
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-section">
+                            <div class="detail-title">🤖 생성형 AI 활용</div>
+                            <ul class="detail-list">
+                                <li>GPT 기반 다중 프롬프트 체이닝 (Chain of Thought)</li>
+                                <li>주간/월간 자동 요약 리포트 생성</li>
+                                <li>통계 데이터 자동 분석 및 인사이트 도출</li>
+                                <li>정책 우선순위 AI 기반 추천 시스템</li>
+                                <li>자연어 기반 차트 및 그래프 설명 생성</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-title">📋 리포트 구성 요소</div>
+                            <ul class="detail-list">
+                                <li>제안 접수 현황 및 트렌드 분석</li>
+                                <li>부서별 업무량 분석</li>
+                                <li>시민 관심사 키워드 분석</li>
+                                <li>정책 우선순위 추천</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow"></div>
+            
+            <!-- 자동 배포 시스템 -->
+            <div class="flow-step">
+                <div class="step-container">
+                    <div class="step-box">
+                        <div class="step-title">📧 자동 배포 시스템</div>
+                        <div class="step-desc">PDF/웹뷰 출력<br>내부 행정망 연동 • 이메일 발송</div>
+                    </div>
+                    <div class="step-details">
+                        <div class="detail-section">
+                            <div class="detail-title">🎯 자동화 기능</div>
+                            <ul class="detail-list">
+                                <li>매주 월요일 오전 9시 정기 리포트 자동 생성</li>
+                                <li>PDF/HTML/Excel 다중 포맷 지원</li>
+                                <li>부서별 맞춤 리포트 자동 배포</li>
+                                <li>긴급 이슈 발생 시 실시간 알림 리포트</li>
+                                <li>시장/부시장 브리핑용 요약 리포트 별도 생성</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-title">🔗 연동 시스템</div>
+                            <ul class="detail-list">
+                                <li>춘천시 내부 행정망 연동</li>
+                                <li>기존 그룹웨어 시스템 연계</li>
+                                <li>모바일 푸시 알림 서비스</li>
+                                <li>SMS/이메일 자동 발송</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tech-stack">
+            <div class="tech-card">
+                <h3>🤖 AI/ML 기술 스택</h3>
+                <ul class="tech-list">
+                    <li>KoGPT / GPT-4 (요약 및 변환)</li>
+                    <li>KoBERT (분류 및 감정 분석)</li>
+                    <li>Sentence-BERT (임베딩)</li>
+                    <li>FAISS (벡터 검색)</li>
+                    <li>scikit-learn (군집화)</li>
+                </ul>
+            </div>
+            
+            <div class="tech-card">
+                <h3>💻 개발 기술 스택</h3>
+                <ul class="tech-list">
+                    <li>React/Vue (프론트엔드)</li>
+                    <li>Python Flask/FastAPI (백엔드)</li>
+                    <li>MongoDB/PostgreSQL (데이터베이스)</li>
+                    <li>HuggingFace Transformers</li>
+                    <li>카카오톡 챗봇 API</li>
+                </ul>
+            </div>
+            
+            <div class="tech-card">
+                <h3>🛠️ 기술적 차별화 포인트</h3>
+                <ul class="tech-list">
+                    <li>실시간 재학습 파이프라인</li>
+                    <li>멀티모달 입력 확장성</li>
+                    <li>RAG 구조 확장 가능성</li>
+                    <li>로컬 서버 구동</li>
+                    <li>카카오톡 챗봇 API</li>
+                </ul>
+            </div>
+                <h3>
